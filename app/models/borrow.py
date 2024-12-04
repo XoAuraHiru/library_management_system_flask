@@ -3,9 +3,9 @@ from enum import Enum
 from ..db import db
 
 class BorrowStatus(Enum):
-    BORROWED = 'borrowed'
-    RETURNED = 'returned'
-    OVERDUE = 'overdue'
+    BORROWED = 'BORROWED'
+    RETURNED = 'RETURNED'
+    OVERDUE = 'OVERDUE'
 
 class BorrowRecord(db.Model):
     __tablename__ = 'borrow_records'

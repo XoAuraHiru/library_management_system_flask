@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-4">Library Management System</h1>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Books</h5>
+                    <h2 class="card-text">{{ total_books }}</h2>
+                    <p class="card-text"><small>Books in collection</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Library Members</h5>
+                    <h2 class="card-text">{{ total_users }}</h2>
+                    <p class="card-text"><small>Registered users</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Borrows</h5>
+                    <h2 class="card-text">{{ active_borrows }}</h2>
+                    <p class="card-text"><small>Currently borrowed books</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Overdue Books</h5>
+                    <h2 class="card-text">{{ overdue_borrows }}</h2>
+                    <p class="card-text"><small>Need attention</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('books.add_book') }}" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle me-2"></i>Add New Book
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('users.add_user') }}" class="btn btn-success w-100">
+                                <i class="bi bi-person-plus me-2"></i>Register User
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('borrows.list_borrows') }}" class="btn btn-info w-100 text-white">
+                                <i class="bi bi-arrow-left-right me-2"></i>Manage Borrows
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('books.list_books') }}" class="btn btn-secondary w-100">
+                                <i class="bi bi-search me-2"></i>Browse Books
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
