@@ -1,9 +1,10 @@
-# app/models/user.py
 from enum import Enum
+from sqlalchemy.ext.hybrid import hybrid_property
 from ..db import db
+from .borrow import BorrowStatus  # Make sure to import BorrowStatus
 
 class UserType(Enum):
-    STUDENT = 'STUDENT'  # Match database values (uppercase)
+    STUDENT = 'STUDENT'
     FACULTY = 'FACULTY'
     STAFF = 'STAFF'
 
@@ -23,6 +24,14 @@ class User(db.Model):
         back_populates='user',
         cascade='all, delete-orphan'
     )
+
+    @hybrid_property
+    def active_borrows(self):
+        return [record for record in self.borrow_records if record.status == BorrowStatus.BORROWED]
+
+    @property
+    def active_borrows_count(self):
+        return len(self.active_borrows)
 
     @property
     def full_name(self):

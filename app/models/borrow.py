@@ -5,13 +5,14 @@ from ..db import db
 class BorrowStatus(Enum):
     BORROWED = 'borrowed'
     RETURNED = 'returned'
+    OVERDUE = 'overdue'
 
 class BorrowRecord(db.Model):
     __tablename__ = 'borrow_records'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     borrow_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     due_date = db.Column(db.DateTime, nullable=False)
     return_date = db.Column(db.DateTime)

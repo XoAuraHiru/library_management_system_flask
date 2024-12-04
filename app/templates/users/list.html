@@ -49,7 +49,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Active Borrows</h5>
                     <h2 class="card-text">
-                        {{ users|sum(attribute='active_borrows|length') }}
+                        {{ users|sum(attribute='active_borrows_count') }}
                     </h2>
                     <p class="card-text">
                         <small>Current borrowed items</small>
@@ -131,7 +131,7 @@
                                 {% set active_borrows = user.active_borrows %}
                                 {% if active_borrows %}
                                     <div class="d-flex align-items-center">
-                                        <span class="badge bg-primary me-2">{{ active_borrows|length }}</span>
+                                        <span class="badge bg-primary me-2">{{ users|sum(attribute='active_borrows_count') }}</span>
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-primary"
                                                 data-bs-toggle="modal"

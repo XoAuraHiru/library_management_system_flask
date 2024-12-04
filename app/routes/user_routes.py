@@ -11,7 +11,6 @@ bp = Blueprint('users', __name__, url_prefix='/users')
 def list_users():
     try:
         users = User.query.order_by(User.last_name, User.first_name).all()
-        # Add debug logging
         current_app.logger.debug(f"Found {len(users)} users")
         for user in users:
             current_app.logger.debug(f"User: {user.full_name}, Type: {user.user_type}")
