@@ -1,3 +1,4 @@
+from pathlib import Path
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from typing import Optional, Type
@@ -5,8 +6,16 @@ from config import Config
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from dotenv import load_dotenv
+load_dotenv()
+from config import Config 
 
-# Initialize SQLAlchemy with type hints
+class Config:
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{os.environ.get('MYSQL_USER')}:{os.environ.get('MYSQL_PASSWORD')}@{os.environ.get('MYSQL_HOST')}/{os.environ.get('MYSQL_DB')}"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+
 db = SQLAlchemy()
 
 def create_app(config_class: Optional[Type[Config]] = None) -> Flask:

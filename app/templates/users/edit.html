@@ -1,0 +1,289 @@
+{# templates/users/edit.html #}
+{% extends 'base.html' %}
+
+{% block title %}Edit User - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Edit User</h5>
+                    <span class="badge bg-light text-dark">Member ID: {{ user.id }}</span>
+                </div>
+                
+                {# User Statistics Summary #}
+                <div class="card-body border-bottom">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Borrowing Statistics</h6>
+                            <ul class="list-unstyled">
+                                <li>Active Borrows: 
+                                    <span class="badge bg-primary">{{ user.active_borrows|length }}</span>
+                                </li>
+                                <li>Total Borrowed: 
+                                    <span class="badge bg-secondary">{{ user.borrow_records|length }}</span>
+                                </li>
+                                <li>Current Status:
+                                    {% if user.active_borrows|length >= (5 if user.user_type == UserType.STAFF else 3) %}
+                                        <span class="badge bg-danger">Limit Reached</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Can Borrow</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Account Information</h6>
+                            <ul class="list-unstyled">
+                                <li>Member Since: {{ user.created_at.strftime('%Y-%m-%d') }}</li>
+                                <li>Last Updated: {{ user.updated_at.strftime('%Y-%m-%d') }}</li>
+                                <li>Account Type: 
+                                    <span class="badge {% if user.user_type == UserType.STAFF %}bg-success{% else %}bg-info{% endif %}">
+                                        {{ user.user_type.value|title }}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {# User Type Selection - with warning about active borrows #}
+                        <div class="mb-4">
+                            <label class="form-label">User Type</label>
+                            <div class="d-flex gap-3">
+                                {% for type in UserType %}
+                                <div class="form-check">
+                                    <input class="form-check-input user-type-radio" 
+                                           type="radio" 
+                                           name="user_type" 
+                                           id="type_{{ type.value }}" 
+                                           value="{{ type.value }}"
+                                           {% if user.user_type == type %}checked{% endif %}
+                                           {% if user.active_borrows and user.user_type == UserType.STAFF and type == UserType.STUDENT %}
+                                           data-bs-toggle="tooltip"
+                                           data-bs-title="Cannot change to student while having more than 3 active borrows"
+                                           disabled
+                                           {% endif %}
+                                           required>
+                                    <label class="form-check-label" for="type_{{ type.value }}">
+                                        {{ type.value|title }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">
+                                Borrowing limits: Staff (5 books), Students (3 books)
+                            </div>
+                        </div>
+
+                        {# Personal Information Section #}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Personal Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="first_name" class="form-label">First Name</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="first_name" 
+                                                   name="first_name"
+                                                   value="{{ user.first_name }}"
+                                                   required>
+                                            <div class="invalid-feedback">
+                                                First name is required
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="last_name" class="form-label">Last Name</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="last_name" 
+                                                   name="last_name"
+                                                   value="{{ user.last_name }}"
+                                                   required>
+                                            <div class="invalid-feedback">
+                                                Last name is required
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Contact Information Section #}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Contact Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email"
+                                           value="{{ user.email }}"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please enter a valid email address
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="phone" 
+                                           name="phone"
+                                           value="{{ user.phone or '' }}"
+                                           pattern="[0-9]{10}"
+                                           placeholder="1234567890">
+                                    <div class="form-text">
+                                        Optional: Enter a 10-digit phone number
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Active Borrows Summary - if any exist #}
+                        {% if user.active_borrows %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Active Borrows</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Book</th>
+                                                <th>Due Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for borrow in user.active_borrows %}
+                                            <tr>
+                                                <td>{{ borrow.book.title }}</td>
+                                                <td>
+                                                    {{ borrow.due_date.strftime('%Y-%m-%d') }}
+                                                    {% if borrow.is_overdue() %}
+                                                        <span class="badge bg-danger">Overdue</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <form method="POST" 
+                                                          action="{{ url_for('borrows.return_book', id=borrow.id) }}"
+                                                          class="d-inline">
+                                                        <button type="submit" 
+                                                                class="btn btn-sm btn-success"
+                                                                onclick="return confirm('Confirm book return?')">
+                                                            Return
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {# Form Actions #}
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Save Changes
+                                </button>
+                                <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                            {% if not user.active_borrows %}
+                            <button type="button" 
+                                    class="btn btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i> Delete User
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Delete Confirmation Modal #}
+    {% if not user.active_borrows %}
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete user "{{ user.full_name }}"?</p>
+                    <p class="text-muted">This action cannot be undone. All borrowing history will be permanently deleted.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('users.delete_user', id=user.id) }}" 
+                       class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+// Enable form validation
+(function() {
+    'use strict';
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Handle user type change restrictions
+    const userTypeRadios = document.querySelectorAll('.user-type-radio');
+    userTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

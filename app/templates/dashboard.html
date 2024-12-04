@@ -1,0 +1,290 @@
+{# templates/dashboard.html #}
+{% extends 'base.html' %}
+
+{% block title %}Library Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {# Welcome Section with Quick Stats #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="card-title">Library Dashboard</h2>
+                            <p class="card-text mb-0">
+                                {{ current_time.strftime('%A, %B %d, %Y') }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <h3>{{ current_time.strftime('%H:%M') }}</h3>
+                            <p class="mb-0">Library System Status: 
+                                <span class="badge bg-success">Active</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Key Metrics Overview #}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Books Overview</h5>
+                    <h2 class="display-4">{{ total_books }}</h2>
+                    <p class="mb-0">Total Books</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Available: {{ available_books }}</small>
+                        <small>Borrowed: {{ borrowed_books }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Users</h5>
+                    <h2 class="display-4">{{ total_users }}</h2>
+                    <p class="mb-0">Registered Members</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Students: {{ student_count }}</small>
+                        <small>Staff: {{ staff_count }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Current Borrows</h5>
+                    <h2 class="display-4">{{ active_borrows }}</h2>
+                    <p class="mb-0">Books on Loan</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Due Today: {{ due_today }}</small>
+                        <small>Overdue: {{ overdue_count }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Attention Needed</h5>
+                    <h2 class="display-4">{{ attention_count }}</h2>
+                    <p class="mb-0">Items Need Attention</p>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <small>Overdue: {{ overdue_count }}</small>
+                        <small>Low Stock: {{ low_stock_count }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Recent Activity and Alerts #}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for activity in recent_activities %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker 
+                                        {% if activity.type == 'borrow' %}bg-primary
+                                        {% elif activity.type == 'return' %}bg-success
+                                        {% elif activity.type == 'overdue' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                            </div>
+                            <div class="timeline-content">
+                                <p class="mb-1">
+                                    {{ activity.description }}
+                                    <small class="text-muted">
+                                        {{ activity.timestamp.strftime('%H:%M') }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Alerts & Notifications</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for alert in alerts %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ alert.title }}</h6>
+                                    <p class="mb-1 small">{{ alert.description }}</p>
+                                </div>
+                                <span class="badge bg-{{ alert.severity }} rounded-pill">
+                                    {{ alert.count }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Popular Books and User Statistics #}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Most Popular Books</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Times Borrowed</th>
+                                    <th>Availability</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in popular_books %}
+                                <tr>
+                                    <td>
+                                        {{ book.title }}
+                                        <br>
+                                        <small class="text-muted">by {{ book.author }}</small>
+                                    </td>
+                                    <td>{{ book.borrow_count }}</td>
+                                    <td>
+                                        {% if book.available_quantity > 0 %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Monthly Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyStats" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Custom CSS for Timeline #}
+{% block styles %}
+<style>
+.timeline {
+    position: relative;
+    padding: 1rem;
+    margin: 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 2.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0.25rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.list-group-item:last-child {
+    border-bottom: 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly Statistics Chart
+    const ctx = document.getElementById('monthlyStats').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_stats.labels|tojson }},
+            datasets: [{
+                label: 'Borrows',
+                data: {{ monthly_stats.borrows|tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }, {
+                label: 'Returns',
+                data: {{ monthly_stats.returns|tojson }},
+                borderColor: 'rgb(255, 99, 132)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Monthly Borrowing Activity'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

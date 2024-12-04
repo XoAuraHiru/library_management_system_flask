@@ -1,0 +1,42 @@
+.navbar {
+    margin-bottom: 2rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.alert {
+    margin-bottom: 1rem;
+}
+
+.book-status-available {
+    color: #28a745;
+}
+
+.book-status-unavailable {
+    color: #dc3545;
+}
+
+.overdue {
+    background-color: #ffe6e6;
+}
+
+/* Add some spacing between form elements */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Style for the dashboard cards */
+.stats-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}

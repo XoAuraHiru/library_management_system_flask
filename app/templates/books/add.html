@@ -1,0 +1,190 @@
+{# templates/books/add.html #}
+{% extends 'base.html' %}
+
+{% block title %}Add New Book{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Add New Book</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {# ISBN Input with validation #}
+                        <div class="mb-3">
+                            <label for="isbn" class="form-label">ISBN</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="isbn" 
+                                       name="isbn" 
+                                       pattern="^\d{10}|\d{13}$"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button"
+                                        onclick="validateISBN()">
+                                    Validate ISBN
+                                </button>
+                            </div>
+                            <div class="form-text">Enter 10 or 13 digit ISBN number</div>
+                            <div class="invalid-feedback">
+                                Please enter a valid ISBN number
+                            </div>
+                        </div>
+
+                        {# Title Input #}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title"
+                                   required>
+                            <div class="invalid-feedback">
+                                Book title is required
+                            </div>
+                        </div>
+
+                        {# Author Input #}
+                        <div class="mb-3">
+                            <label for="author" class="form-label">Author</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="author" 
+                                   name="author"
+                                   required>
+                            <div class="invalid-feedback">
+                                Author name is required
+                            </div>
+                        </div>
+
+                        {# Publisher Input #}
+                        <div class="mb-3">
+                            <label for="publisher" class="form-label">Publisher</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="publisher" 
+                                   name="publisher">
+                        </div>
+
+                        {# Publication Year Input #}
+                        <div class="mb-3">
+                            <label for="publication_year" class="form-label">Publication Year</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="publication_year" 
+                                   name="publication_year"
+                                   min="1800"
+                                   max="{{ current_year }}"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a valid publication year
+                            </div>
+                        </div>
+
+                        {# Quantity Input with dynamic available quantity update #}
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Number of Copies</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="quantity" 
+                                   name="quantity"
+                                   min="1"
+                                   value="1"
+                                   required>
+                            <div class="invalid-feedback">
+                                Quantity must be at least 1
+                            </div>
+                        </div>
+
+                        {# Form Actions #}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Book
+                            </button>
+                            <a href="{{ url_for('books.list_books') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Client-side validation script #}
+{% block scripts %}
+<script>
+// Enable Bootstrap form validation
+(function() {
+    'use strict';
+    
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+
+// ISBN validation function
+function validateISBN() {
+    const isbnInput = document.getElementById('isbn');
+    const isbn = isbnInput.value.replace(/[-\s]/g, '');
+    
+    // Basic format validation
+    if (!/^\d{10}|\d{13}$/.test(isbn)) {
+        alert('ISBN must be 10 or 13 digits');
+        return false;
+    }
+    
+    // ISBN-10 validation
+    if (isbn.length === 10) {
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            sum += (10 - i) * parseInt(isbn.charAt(i));
+        }
+        const checkDigit = (11 - (sum % 11)) % 11;
+        const lastDigit = isbn.charAt(9) === 'X' ? 10 : parseInt(isbn.charAt(9));
+        
+        if (checkDigit === lastDigit) {
+            alert('Valid ISBN-10');
+            return true;
+        }
+    }
+    
+    // ISBN-13 validation
+    if (isbn.length === 13) {
+        let sum = 0;
+        for (let i = 0; i < 12; i++) {
+            sum += (i % 2 === 0 ? 1 : 3) * parseInt(isbn.charAt(i));
+        }
+        const checkDigit = (10 - (sum % 10)) % 10;
+        
+        if (checkDigit === parseInt(isbn.charAt(12))) {
+            alert('Valid ISBN-13');
+            return true;
+        }
+    }
+    
+    alert('Invalid ISBN');
+    return false;
+}
+
+// Auto-update year range
+document.addEventListener('DOMContentLoaded', function() {
+    const yearInput = document.getElementById('publication_year');
+    yearInput.max = new Date().getFullYear();
+});
+</script>
+{% endblock %}
+{% endblock %}

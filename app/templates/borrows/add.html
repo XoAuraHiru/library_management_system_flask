@@ -1,0 +1,402 @@
+{# templates/borrows/add.html #}
+{% extends 'base.html' %}
+
+{% block title %}New Borrowing Record{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Create New Borrowing Record</h5>
+                </div>
+                <div class="card-body">
+                    {# User Selection Section #}
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Select User</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="user_id" class="form-label">Library Member</label>
+                                    <select class="form-select" 
+                                            id="user_id" 
+                                            name="user_id" 
+                                            required>
+                                        <option value="">Select a user...</option>
+                                        {% for user in users %}
+                                        <option value="{{ user.id }}">
+                                            {{ user.full_name }} ({{ user.user_type.value|title }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a user
+                                    </div>
+                                </div>
+
+                                {# User Borrowing Status - Populated by JavaScript #}
+                                <div id="userStatus" class="alert alert-info d-none">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Borrowing Status:</strong>
+                                            <span id="activeBorrows"></span>
+                                        </div>
+                                        <div>
+                                            <span id="borrowLimit" class="badge bg-primary"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Book Selection Section #}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Select Book</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="book_id" class="form-label">Available Books</label>
+                                    <select class="form-select" 
+                                            id="book_id" 
+                                            name="book_id" 
+                                            required>
+                                        <option value="">Select a book...</option>
+                                        {% for book in books %}
+                                        <option value="{{ book.id }}" 
+                                                data-available="{{ book.available_quantity }}">
+                                            {{ book.title }} by {{ book.author }}
+                                            ({{ book.available_quantity }} available)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a book
+                                    </div>
+                                </div>
+
+                                {# Book Availability Status - Populated by JavaScript #}
+                                <div id="bookStatus" class="alert alert-success d-none">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Availability:</strong>
+                                            <span id="availableCount"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Borrowing Details Section #}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Borrowing Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="borrow_days" class="form-label">Borrowing Period (Days)</label>
+                                    <select class="form-select" 
+                                            id="borrow_days" 
+                                            name="borrow_days"
+                                            required>
+                                        <option value="7">1 Week</option>
+                                        <option value="14" selected>2 Weeks</option>
+                                        <option value="21">3 Weeks</option>
+                                        <option value="30">1 Month</option>
+                                    </select>
+                                </div>
+
+                                {# Due Date Preview #}
+                                <div id="dueDate" class="alert alert-info">
+                                    <strong>Due Date:</strong>
+                                    <span id="dueDateText"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Form Actions #}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" 
+                                    class="btn btn-primary"
+                                    id="submitButton">
+                                <i class="bi bi-book"></i> Create Borrowing Record
+                            </button>
+                            <a href="{{ url_for('borrows.list_borrows') }}" 
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userSelect = document.getElementById('user_id');
+    const bookSelect = document.getElementById('book_id');
+    const borrowDaysSelect = document.getElementById('borrow_days');
+    const userStatus = document.getElementById('userStatus');
+    const bookStatus = document.getElementById('bookStatus');
+    const activeBorrows = document.getElementById('activeBorrows');
+    const borrowLimit = document.getElementById('borrowLimit');
+    const availableCount = document.getElementById('availableCount');
+    const dueDateText = document.getElementById('dueDateText');
+    const submitButton = document.getElementById('submitButton');
+
+    // Enable form validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Update user borrowing status
+    userSelect.addEventListener('change', async function() {
+        const userId = this.value;
+        userStatus.classList.add('d-none');
+        
+        if (!userId) return;
+        
+        try {
+            const response = await fetch(`/borrows/api/user-info/${userId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                activeBorrows.textContent = 
+                    `${data.active_borrows} of ${data.max_borrows} books borrowed`;
+                borrowLimit.textContent = `${data.user_type.toUpperCase()} USER`;
+                
+                userStatus.classList.remove('d-none');
+                userStatus.className = `alert ${data.can_borrow ? 'alert-info' : 'alert-warning'}`;
+                
+                submitButton.disabled = !data.can_borrow;
+                if (!data.can_borrow) {
+                    alert('This user has reached their borrowing limit.');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        }
+    });
+
+    // Update book availability status
+    bookSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        bookStatus.classList.add('d-none');
+        
+        if (!this.value) return;
+        
+        const available = parseInt(selectedOption.dataset.available);
+        availableCount.textContent = `${available} copies available`;
+        
+        bookStatus.classList.remove('d-none');
+        bookStatus.className = `alert ${available > 0 ? 'alert-success' : 'alert-danger'}`;
+    });
+
+    // Update due date preview
+    function updateDueDate() {
+        const days = parseInt(borrowDaysSelect.value);
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + days);
+        
+        dueDateText.textContent = dueDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    borrowDaysSelect.addEventListener('change', updateDueDate);
+    updateDueDate(); // Initialize due date display
+
+    // Track form validation state
+    let formIsValid = {
+        user: false,
+        book: false
+    };
+
+    // Function to validate the entire form
+    function validateForm() {
+        const isValid = Object.values(formIsValid).every(Boolean);
+        submitButton.disabled = !isValid;
+        return isValid;
+    }
+
+    // Enhanced user selection validation
+    userSelect.addEventListener('change', function(e) {
+        const selectedUser = userSelect.options[userSelect.selectedIndex];
+        formIsValid.user = !!userSelect.value;
+        
+        if (!selectedUser.value) {
+            userStatus.classList.add('d-none');
+            formIsValid.user = false;
+        }
+        
+        validateForm();
+    });
+
+    // Enhanced book selection validation with availability check
+    bookSelect.addEventListener('change', function(e) {
+        const selectedBook = bookSelect.options[bookSelect.selectedIndex];
+        formIsValid.book = false;
+        
+        if (!selectedBook.value) {
+            bookStatus.classList.add('d-none');
+            validateForm();
+            return;
+        }
+        
+        const availableQuantity = parseInt(selectedBook.dataset.available);
+        formIsValid.book = availableQuantity > 0;
+        
+        if (availableQuantity === 0) {
+            bookSelect.setCustomValidity('This book is not available for borrowing');
+        } else {
+            bookSelect.setCustomValidity('');
+        }
+        
+        validateForm();
+    });
+
+    // Initialize selectize.js for enhanced select inputs
+    const bookSelectize = new Selectize(bookSelect, {
+        sortField: 'text',
+        searchField: ['text'],
+        placeholder: 'Search for a book...',
+        render: {
+            option: function(item, escape) {
+                const option = bookSelect.querySelector(`option[value="${item.value}"]`);
+                const available = option ? parseInt(option.dataset.available) : 0;
+                
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2">
+                        <div>
+                            <strong>${escape(item.text.split(' by ')[0])}</strong><br>
+                            <small class="text-muted">by ${escape(item.text.split(' by ')[1])}</small>
+                        </div>
+                        <span class="badge ${available > 0 ? 'bg-success' : 'bg-danger'}">
+                            ${available} available
+                        </span>
+                    </div>
+                `;
+            }
+        }
+    });
+
+    const userSelectize = new Selectize(userSelect, {
+        sortField: 'text',
+        searchField: ['text'],
+        placeholder: 'Search for a user...',
+        render: {
+            option: function(item, escape) {
+                const userType = item.text.match(/\((.*?)\)$/)[1];
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2">
+                        <div>
+                            <strong>${escape(item.text.replace(/ \(.*?\)$/, ''))}</strong><br>
+                            <small class="text-muted">${escape(userType)}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+
+    // Add form submission handler with confirmation
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            return;
+        }
+
+        // Get selected book and user details
+        const selectedBook = bookSelect.options[bookSelect.selectedIndex];
+        const selectedUser = userSelect.options[userSelect.selectedIndex];
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + parseInt(borrowDaysSelect.value));
+
+        // Show confirmation dialog
+        const confirmMessage = `
+            Are you sure you want to proceed with this borrowing?
+            
+            Book: ${selectedBook.text}
+            User: ${selectedUser.text}
+            Due Date: ${dueDate.toLocaleDateString()}
+            
+            Click OK to confirm.
+        `;
+
+        if (!confirm(confirmMessage)) {
+            e.preventDefault();
+        }
+    });
+
+    // Helper function to format dates consistently
+    function formatDate(date) {
+        return new Intl.DateTimeFormat('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }).format(date);
+    }
+
+    // Update due date whenever borrowing period changes
+    borrowDaysSelect.addEventListener('change', function() {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + parseInt(this.value));
+        dueDateText.textContent = formatDate(dueDate);
+    });
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/css/selectize.bootstrap4.min.css">
+<style>
+.selectize-input {
+    min-height: 38px;
+}
+
+.book-badge {
+    min-width: 60px;
+    text-align: center;
+}
+
+.alert {
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.selectize-dropdown .option {
+    padding: 0 !important;
+}
+
+.form-label {
+    font-weight: 500;
+}
+</style>
+{% endblock %}

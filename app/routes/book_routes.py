@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, current_app
 from typing import Union, List
 from sqlalchemy.exc import IntegrityError
 from app import db
