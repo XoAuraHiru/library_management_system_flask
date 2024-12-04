@@ -1,0 +1,25 @@
+# Python files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+venv/
+env/
+
+# Test results
+tests/results/
+
+# Log files
+logs/
+
+# Build artifacts
+build/
+dist/
+
+# IDE specific files
+.idea/
+.vscode/
+
+# OS specific files
+.DS_Store
