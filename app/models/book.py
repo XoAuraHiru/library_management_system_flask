@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
-from app import db
+from ..db import db
 
 class Book(db.Model):
     __tablename__ = 'books'

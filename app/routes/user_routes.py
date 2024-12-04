@@ -8,70 +8,38 @@ from email_validator import validate_email, EmailNotValidError
 bp = Blueprint('users', __name__, url_prefix='/users')
 
 @bp.route('/')
-def list_users() -> str:
-    """Display all library users.
-    
-    Returns:
-        Rendered template with list of users, ordered by name
-    """
+def list_users():
     try:
-        users: List[User] = User.query.order_by(User.last_name, User.first_name).all()
-        return render_template('users/list.html', users=users)
+        users = User.query.order_by(User.last_name, User.first_name).all()
+        # Add debug logging
+        current_app.logger.debug(f"Found {len(users)} users")
+        for user in users:
+            current_app.logger.debug(f"User: {user.full_name}, Type: {user.user_type}")
+        return render_template('users/list.html', users=users, UserType=UserType)
     except Exception as e:
         current_app.logger.error(f"Error retrieving users: {str(e)}")
-        flash("Unable to retrieve users at this time.", "error")
-        return render_template('users/list.html', users=[])
+        return render_template('users/list.html', users=[], UserType=UserType)
 
 @bp.route('/add', methods=['GET', 'POST'])
-def add_user() -> Union[str, Response]:
-    """Add a new library user.
-    
-    Handles both the display of the user addition form and processing
-    of form submissions. Includes validation for email format and
-    required fields.
-    
-    Returns:
-        Either rendered template (GET) or redirect response (POST)
-    """
+def add_user():
     if request.method == 'POST':
         try:
-            # Validate email format
-            email = request.form['email'].strip()
-            validate_email(email)
-            
-            # Create new user instance
             user = User(
-                user_type=UserType(request.form['user_type']),
-                first_name=request.form['first_name'].strip(),
-                last_name=request.form['last_name'].strip(),
-                email=email,
-                phone=request.form.get('phone', '').strip()
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                email=request.form['email'],
+                user_type=UserType(request.form['user_type'])
             )
-            
-            # Validate required fields
-            if not user.first_name or not user.last_name:
-                flash("Please fill in all required fields.", "error")
-                return render_template('users/add.html')
-            
             db.session.add(user)
             db.session.commit()
             flash('User added successfully!', 'success')
             return redirect(url_for('users.list_users'))
-            
-        except EmailNotValidError:
-            flash('Please enter a valid email address.', 'error')
-        except IntegrityError:
-            db.session.rollback()
-            flash('A user with this email already exists.', 'error')
-        except ValueError as e:
-            flash(str(e), 'error')
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error adding user: {str(e)}")
             flash('Error adding user. Please try again.', 'error')
     
-    # For GET request or if POST failed, show the form
-    return render_template('users/add.html', user_types=UserType)
+    return render_template('users/add.html', UserType=UserType)
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_user(id: int) -> Union[str, Response]:

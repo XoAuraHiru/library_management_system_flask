@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from app import db
+from ..db import db
 
 class BorrowStatus(Enum):
     BORROWED = 'borrowed'

@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Any
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column # type: ignore
 from sqlalchemy import DateTime
-from app import db
+from ..db import db 
 
 class Base(DeclarativeBase):
     """Base model class with common fields and methods."""

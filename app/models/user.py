@@ -1,14 +1,15 @@
+# app/models/user.py
 from enum import Enum
-from app import db
+from ..db import db
 
 class UserType(Enum):
-    STUDENT = 'student'
-    FACULTY = 'faculty'
-    STAFF = 'staff'
+    STUDENT = 'STUDENT'  # Match database values (uppercase)
+    FACULTY = 'FACULTY'
+    STAFF = 'STAFF'
 
 class User(db.Model):
     __tablename__ = 'users'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     user_type = db.Column(db.Enum(UserType), nullable=False)
     first_name = db.Column(db.String(255), nullable=False)
@@ -23,13 +24,6 @@ class User(db.Model):
         cascade='all, delete-orphan'
     )
 
-    def __repr__(self):
-        return f"<User {self.first_name} {self.last_name}>"
-
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
-
-    @property
-    def active_borrows(self):
-        return [record for record in self.borrow_records if record.status == BorrowStatus.BORROWED]

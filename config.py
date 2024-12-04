@@ -7,10 +7,10 @@ from pathlib import Path
 @dataclass
 class Config:
     """Application configuration using Python 3.12 features and type hints."""
-    # Database configuration
+    # Database configuration with fallback values
     MYSQL_HOST: str = os.getenv('MYSQL_HOST', 'localhost')
     MYSQL_USER: str = os.getenv('MYSQL_USER', 'root')
-    MYSQL_PASSWORD: str = os.getenv('MYSQL_PASSWORD', '')
+    MYSQL_PASSWORD: str = os.getenv('MYSQL_PASSWORD', '***REMOVED***')
     MYSQL_DB: str = os.getenv('MYSQL_DB', 'library_db')
     
     # SQLAlchemy configuration
@@ -30,4 +30,4 @@ class Config:
     
     # Upload configuration
     MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024  # 16MB max file size
-    UPLOAD_FOLDER: Path = Path('uploads')
+    UPLOAD_FOLDER: Path = Path(os.getenv('UPLOAD_FOLDER', 'uploads'))
