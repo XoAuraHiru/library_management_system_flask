@@ -31,14 +31,6 @@ Our borrowing module streamlines the loan process with features like:
 - Simple book return processing
 - Complete borrowing history
 
-### Dashboard
-The dashboard provides an at-a-glance view of the library's status:
-- Current borrowing statistics
-- Overdue book alerts
-- Popular books tracking
-- User activity monitoring
-- Monthly borrowing trends
-
 ## Technical Requirements
 
 Before installing the system, ensure your environment meets these requirements:
@@ -53,13 +45,7 @@ Before installing the system, ensure your environment meets these requirements:
 
 Follow these steps to set up the Library Management System:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/library-management.git
-   cd library-management
-   ```
-
-2. Create and activate a virtual environment:
+1. Create and activate a virtual environment:
    ```bash
    python -m venv venv
    
@@ -70,20 +56,16 @@ Follow these steps to set up the Library Management System:
    source venv/bin/activate
    ```
 
-3. Install required packages:
+2. Install required packages:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Set up the MySQL database:
-   ```bash
-   mysql -u root -p
-   ```
-   ```sql
-   CREATE DATABASE library_db;
-   ```
+3. Set up the MySQL database:
+   
+   ER Diagram is given with the project
 
-5. Configure environment variables by creating a `.env` file:
+4. Configure environment variables by creating a `.env` file:
    ```
    MYSQL_HOST=localhost
    MYSQL_USER=your_username
@@ -92,12 +74,12 @@ Follow these steps to set up the Library Management System:
    SECRET_KEY=your-secure-secret-key
    ```
 
-6. Initialize the database:
+5. Initialize the database (Optional):
    ```bash
    python -m flask db upgrade
    ```
 
-7. Start the application:
+6. Start the application:
    ```bash
    python run.py
    ```
@@ -193,30 +175,17 @@ To keep the system running smoothly:
 ## Security Considerations
 
 The system implements several security measures:
-- Password hashing for user credentials
 - CSRF protection for forms
 - Input validation and sanitization
 - Secure session handling
 - SQL injection prevention
-
-## Contributing
-
-We welcome contributions! To contribute:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-Please follow our coding standards and include appropriate tests.
 
 ## Support
 
 For support:
 - Check the troubleshooting guide above
 - Review our documentation
-- Submit issues through the issue tracker
-- Contact library-support@yourdomain.com
+- Contact contact@crimsonscript.com
 
 ## License
 
@@ -224,4 +193,4 @@ This Library Management System is released under the MIT License. See LICENSE fi
 
 ---
 
-For more detailed information about specific features or technical aspects, please consult our [Wiki](link-to-wiki) or contact the development team.
+For more detailed information about specific features or technical aspects, please consult our [Website](crimsonscript.com) or contact the development team.
