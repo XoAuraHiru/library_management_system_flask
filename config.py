@@ -29,5 +29,5 @@ class Config:
     SESSION_COOKIE_SAMESITE: str = 'Lax'
     
     # Upload configuration
-    MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024  # 16MB max file size
+    MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024
     UPLOAD_FOLDER: Path = Path(os.getenv('UPLOAD_FOLDER', 'uploads'))

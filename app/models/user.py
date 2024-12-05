@@ -18,15 +18,13 @@ class User(db.Model):
     
     __tablename__ = 'users'
     
-    # Primary key and basic user information
     id = db.Column(db.Integer, primary_key=True)
     user_type = db.Column(db.Enum(UserType), nullable=False)
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
-    phone = db.Column(db.String(20))  # Optional phone number
+    phone = db.Column(db.String(20)) 
     
-    # New timestamp fields
     created_at = db.Column(db.DateTime, nullable=False, 
                           default=datetime.utcnow,
                           server_default=db.text('CURRENT_TIMESTAMP'))
@@ -35,8 +33,8 @@ class User(db.Model):
                           onupdate=datetime.utcnow,
                           server_default=db.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     
-    # Borrowing limits based on user type
-    max_borrow_limit = db.Column(db.Integer, nullable=False, default=3)  # Default for students
+
+    max_borrow_limit = db.Column(db.Integer, nullable=False, default=3)
     
     # Relationships
     borrow_records = db.relationship(
@@ -48,14 +46,14 @@ class User(db.Model):
     def __init__(self, **kwargs):
         """Initialize a new user, setting appropriate borrowing limits based on user type."""
         super(User, self).__init__(**kwargs)
-        # Set higher borrowing limit for staff/faculty
+
         if self.user_type in (UserType.STAFF, UserType.FACULTY):
             self.max_borrow_limit = 5
 
     @hybrid_property
     def active_borrows(self):
         """Returns a list of currently borrowed books that haven't been returned."""
-        from .borrow import BorrowStatus  # Import here to avoid circular imports
+        from .borrow import BorrowStatus
         return [record for record in self.borrow_records 
                 if record.status == BorrowStatus.BORROWED]
 
