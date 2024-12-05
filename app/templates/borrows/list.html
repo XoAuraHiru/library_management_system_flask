@@ -1,6 +1,4 @@
-{# templates/borrows/list.html #}
 {% extends 'base.html' %}
-
 {% block title %}Borrowing Records{% endblock %}
 
 {% block content %}
@@ -17,6 +15,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
@@ -27,16 +26,24 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Returned Today</h5>
                     <h2 class="card-text">
-                        {{ borrows|selectattr('return_date', 'defined')|selectattr('return_date', 'day_is', today)|list|length }}
+                        {% set today_returns = namespace(count=0) %}
+                        {% for borrow in borrows %}
+                            {% if borrow.return_date and borrow.return_date.date() == today %}
+                                {% set today_returns.count = today_returns.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ today_returns.count }}
                     </h2>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
@@ -50,19 +57,24 @@
     {# Filters and Actions #}
     <div class="row mb-4">
         <div class="col-md-8">
-            <form class="d-flex gap-2" method="GET">
-                <select name="status" class="form-select" style="width: auto;">
-                    <option value="">All Statuses</option>
-                    {% for status in BorrowStatus %}
-                    <option value="{{ status.value }}" {% if request.args.get('status') == status.value %}selected{% endif %}>
-                        {{ status.value|title }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="{{ url_for('borrows.list_borrows') }}" class="btn btn-secondary">Clear</a>
-            </form>
+            <div class="btn-group mb-3">
+                <a href="{{ url_for('borrows.list_borrows') }}" 
+                   class="btn btn-outline-primary {% if not request.args.get('status') %}active{% endif %}">
+                    All Statuses
+                </a>
+                {% for status in BorrowStatus %}
+                <a href="{{ url_for('borrows.list_borrows', status=status.value) }}" 
+                   class="btn btn-outline-primary {% if request.args.get('status') == status.value %}active{% endif %}">
+                    {{ status.value|title }}
+                </a>
+                {% endfor %}
+            </div>
+            
+            {% if request.args %}
+            <a href="{{ url_for('borrows.list_borrows') }}" class="btn btn-secondary">Clear Filters</a>
+            {% endif %}
         </div>
+        
         <div class="col-md-4 text-end">
             <a href="{{ url_for('borrows.add_borrow') }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> New Borrow
@@ -73,8 +85,9 @@
     {# Borrowing Records Table #}
     <div class="card">
         <div class="card-body">
+            {% if borrows %}
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Book</th>
@@ -87,22 +100,22 @@
                     </thead>
                     <tbody>
                         {% for borrow in borrows %}
-                        <tr class="borrow-record {% if borrow.is_overdue() %}table-danger{% endif %}"
-                            data-due-date="{{ borrow.due_date.isoformat() }}"
-                            data-status="{{ borrow.status.value }}">
+                        <tr>
                             <td>
-                                <strong>{{ borrow.book.title }}</strong><br>
+                                <strong>{{ borrow.book.title }}</strong>
+                                <br>
                                 <small class="text-muted">ISBN: {{ borrow.book.isbn }}</small>
                             </td>
                             <td>
-                                {{ borrow.user.full_name }}<br>
+                                {{ borrow.user.full_name }}
+                                <br>
                                 <small class="text-muted">{{ borrow.user.email }}</small>
                             </td>
                             <td>{{ borrow.borrow_date.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 {{ borrow.due_date.strftime('%Y-%m-%d') }}
                                 {% if borrow.is_overdue() %}
-                                <span class="badge bg-danger">Overdue</span>
+                                    <span class="badge bg-danger">Overdue</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -116,33 +129,35 @@
                             </td>
                             <td>
                                 {% if borrow.status == BorrowStatus.BORROWED %}
-                                    <form method="POST" action="{{ url_for('borrows.return_book', id=borrow.id) }}" 
-                                          class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-success"
-                                                onclick="return confirm('Confirm book return?')">
-                                            Return
-                                        </button>
-                                    </form>
-                                    {% if not borrow.is_overdue() %}
-                                    <form method="POST" action="{{ url_for('borrows.extend_borrow', id=borrow.id) }}"
-                                          class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-info"
-                                                onclick="return confirm('Extend borrowing period?')">
-                                            Extend
-                                        </button>
-                                    </form>
-                                    {% endif %}
+                                <form method="POST" action="{{ url_for('borrows.return_book', id=borrow.id) }}" 
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success"
+                                            onclick="return confirm('Confirm book return?')">
+                                        Return
+                                    </button>
+                                </form>
+                                
+                                {% if not borrow.is_overdue() %}
+                                <form method="POST" action="{{ url_for('borrows.extend_borrow', id=borrow.id) }}"
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-info"
+                                            onclick="return confirm('Extend borrowing period?')">
+                                        Extend
+                                    </button>
+                                </form>
+                                {% endif %}
                                 {% endif %}
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center">No borrowing records found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">No borrowing records found.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
