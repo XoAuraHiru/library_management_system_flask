@@ -4,6 +4,9 @@ from typing import Optional
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv # type: ignore
+load_dotenv()
+
 @dataclass
 class Config:
     """Application configuration using Python 3.12 features and type hints."""
