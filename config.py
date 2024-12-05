@@ -8,10 +8,10 @@ from pathlib import Path
 class Config:
     """Application configuration using Python 3.12 features and type hints."""
     # Database configuration with fallback values
-    MYSQL_HOST: str = os.getenv('MYSQL_HOST', 'localhost')
-    MYSQL_USER: str = os.getenv('MYSQL_USER', 'root')
-    MYSQL_PASSWORD: str = os.getenv('MYSQL_PASSWORD', '***REMOVED***')
-    MYSQL_DB: str = os.getenv('MYSQL_DB', 'library_db')
+    MYSQL_HOST: str = os.getenv('MYSQL_HOST')
+    MYSQL_USER: str = os.getenv('MYSQL_USER')
+    MYSQL_PASSWORD: str = os.getenv('MYSQL_PASSWORD')
+    MYSQL_DB: str = os.getenv('MYSQL_DB')
     
     # SQLAlchemy configuration
     SQLALCHEMY_DATABASE_URI: str = (
